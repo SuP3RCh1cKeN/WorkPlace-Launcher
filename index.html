@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<link href="css/template.css" rel="stylesheet">
+<link href="css/trackpad-scroll-emulator.css" rel="stylesheet">
+<script src="node_modules/jquery-2.2.3.min.js"></script>
+<script src="js/trackpad.js"></script>
+<script src="js/functions.js"></script>
+<script>
+    $(document).on({
+        click: function() {
+            $('.menu-dropdown, .menu-dropdown-hide').removeClass('hide');
+        }
+    }, ".settings-btn");
+
+    $(document).on({
+        click: function() {
+            $('.menu-dropdown, .menu-dropdown-hide').addClass('hide');
+        }
+    }, ".menu-dropdown-hide");
+
+    $(document).on({
+        click: function() {
+            toggleSettings();
+        }
+    }, ".close-settings");
+    
+    $(document).on({
+        click: function() {
+            resetMemory();
+        }
+    }, ".reset-memory");
+    
+    $(document).on({
+        click: function() {
+            setNRE();
+        }
+    }, ".close-memory");
+
+    $(document).on({
+        click: function() {
+            toggleMemory();
+        }
+    }, ".close-memory, #btn-memory");
+
+    $(document).on({
+        click: function() {
+          openPopup("left","small","Increasing <b>Heap</b> allows your Niagara installation to use more of your PC's memory, enabling you to open larger files in Workbench, and run larger stations. Increasing <b>Stack</b> is not recommended unless you have an excessively large station or history database. Increasing either beyond 3-4x their default values is <b>not</b> typically recommended.<br><br>In <b>Niagara 4</b>, you can distinguish between memory used by the <b>Station</b> (having a large Config, a lot of logic blocks, etc), and <b>Workbench</b> (opening a large XML or text file, running a large Program Service operation or query, etc).<br><br>Restarting Workbench and any running stations is required for changes to take effect.","GOT IT",false);
+        }
+    }, ".memory-container .question");
+
+    $(document).on({
+        click: function() {
+            toggleAbout();
+        }
+    }, ".close-about");
+
+    $(document).on({
+        click: function() {
+            setSyncMaster();
+        }
+    }, ".setMaster");
+
+    var daemonTimer = false;
+    $(document).on({
+      click: function() {
+        if (daemonTimer == false) {
+          launchProgram("daemon");
+          $(".btn-daemon").addClass("clicked");
+          daemonTimer = true;
+          setTimeout(function() {
+            $(".btn-daemon").removeClass("clicked");
+            daemonTimer = false;
+          }, 3000);
+        }
+      }
+    }, ".btn-daemon");
+
+    var programNoConsoleTimer = false;
+    $(document).on({
+      click: function() {
+        if (programNoConsoleTimer == false) {
+          launchProgram("program-no-console");
+          $(".btn-program-no-console").addClass("clicked");
+          programNoConsoleTimer = true;
+          setTimeout(function() {
+            $(".btn-program-no-console").removeClass("clicked");
+            programNoConsoleTimer = false;
+          }, 5000);
+        }
+      }
+    }, ".btn-program-no-console");
+
+    var programConsoleTimer = false;
+    $(document).on({
+      click: function() {
+        if (programConsoleTimer == false) {
+          launchProgram("program-console");
+          $(".btn-program-console").addClass("clicked");
+          programConsoleTimer = true;
+          setTimeout(function() {
+            $(".btn-program-console").removeClass("clicked");
+            programConsoleTimer = false;
+          }, 1000);
+        }
+      }
+    }, ".btn-program-console");
+
+    var consoleOnlyTimer = false;
+    $(document).on({
+      click: function() {
+        if (consoleOnlyTimer == false) {
+          launchProgram("console-only");
+          $(".btn-console-only").addClass("clicked");
+          consoleOnlyTimer = true;
+          setTimeout(function() {
+            $(".btn-console-only").removeClass("clicked");
+            consoleOnlyTimer = false;
+          }, 1000);
+        }
+      }
+    }, ".btn-console-only");
+    
+    $(document).on({
+      click: function() {
+        openFolder();
+      }
+    }, ".btn-open-folder");
+
+    $(document).on({
+      click: function() {
+        win.minimize();
+      }
+    }, ".min-btn");
+
+    $(document).on({
+        click: function() {
+            if ($(this).prop("checked") == true) {
+                localStorage.usethemes = "true";
+            } else {
+                localStorage.usethemes = "false";
+            }
+            loadVersions();
+        }
+    }, ".usethemes");
+
+    $(document).on({
+        click: function() {
+            if ($(this).prop("checked") == true) {
+                localStorage.usepopups = "true";
+            } else {
+                localStorage.usepopups = "false";
+            }
+        }
+    }, ".usepopups");
+
+    $(document).on({
+        click: function() {
+            if ($(this).prop("checked") == true) {
+                localStorage.usetray = "true";
+                createTray();
+            } else {
+                localStorage.usetray = "false";
+                closeTray();
+            }
+        }
+    }, ".usetray");
+
+    $(document).on({
+        click: function() {
+            if ($(this).prop("checked") == true) {
+                localStorage.useAutoSync = "true";
+                $(".settings-sync-master-row").removeClass("super-hide");
+                checkAutoSync();
+            } else {
+                localStorage.useAutoSync = "false";
+                $(".settings-sync-master-row").addClass("super-hide");
+            }
+        }
+    }, ".useAutoSync");
+
+    $(document).on({
+        click: function() {
+            $(".export-sync-file").trigger("click");
+        }
+    }, ".exportSync");
+
+    $(document).on({
+        click: function() {
+            $(".import-sync-file").trigger("click");
+        }
+    }, ".importSync");
+
+    $(document).on({
+        change: function() {
+            exportSyncFile($(this).val());
+            $(this).val("");
+        }
+    }, ".export-sync-file");
+    
+    $(document).on({
+        change: function() {
+            setSyncMaster("AX");
+        }
+    }, "#settings-ax-master");
+    
+    $(document).on({
+        change: function() {
+            setSyncMaster("N4");
+        }
+    }, "#settings-n4-master");
+
+    $(document).on({
+        change: function() {
+            if ($(this).val().indexOf(".xml") == -1) {
+                openPopup("center","normal","Import file must be an XML file!","GOT IT",false);
+            } else {
+                importSyncFile($(this).val());
+            }
+            $(this).val("");
+        }
+    }, ".import-sync-file");
+
+    $(document).on({
+        click: function() {
+            $(".new-directory").trigger("click");
+        }
+    }, ".add-directory");
+
+    $(document).on({
+        change: function() {
+            var oldValue = localStorage.wpfolder;
+            if (oldValue == "") {
+                localStorage.wpfolder = $(this).val();
+            } else {
+                localStorage.wpfolder = oldValue + "," + $(this).val();
+            }
+            $(this).val("");
+            loadVersions();
+        }
+    }, ".new-directory");
+
+    $(document).on({
+        click: function() {
+            openPopup("center","normal","This will clear all stored Niagara folders!\nAre you sure?","Yes","Cancel",resetWPL);
+        }
+    }, ".clear");
+
+    $(document).on({
+        click: function() {
+            toggleSettings();
+            closeAllMenus();
+        }
+    }, ".menu-dropdown .settings");
+
+    $(document).on({
+        click: function() {
+            toggleAbout();
+            closeAllMenus();
+        }
+    }, ".menu-dropdown .about");
+
+    $(document).on({
+        click: function() {
+            win.close();
+            closeAllMenus();
+        }
+    }, ".close");
+
+    $(document).on({
+        change: function() {
+            if ($(this).attr("data-version") == "AX") {
+                saveTheme("AX");
+            } else if ($(this).attr("data-version") == "N4") {
+                saveTheme("N4");
+            }
+        }
+    }, ".selected-theme");
+
+    $(document).on({
+        change: function() {
+            checkAutoSync();
+            checkThemes();
+            checkHostID();
+            checkNRE();
+        }
+    }, ".versions");
+
+    $(document).on({
+        change: function() {
+            localStorage.deflang = $(this).val();
+        }
+    }, "#settings-languages");
+
+    $(document).on({
+        click: function() {
+            gui.Shell.openExternal(this.href);
+            return false;
+        }
+    }, "a[target=_blank]");
+</script>
+<html>
+
+<head>
+    <title>WorkPlace Launcher</title>
+</head>
+
+<body>
+    <div class="menu">
+        <div class="title">
+            <span><img src="/images/rocket_icon.png">WorkPlace Launcher</span>
+        </div>
+        <div class="min-btn min">
+            <span>&minus;</span>
+        </div>
+        <div class="close-btn close">
+            <span><i class="icon-close"></i></span>
+        </div>
+    </div>
+    <div class="popup-container hide">
+        <div class="popup-content">
+            <div class="popup-text"></div>
+            <div class="popup-buttons">
+                <div class="popup-cancel screen-button"></div>
+                <div class="popup-okay screen-button"></div>
+            </div>
+        </div>
+    </div>
+    <div class="content-container">
+        <div class="menu-dropdown hide">
+            <div class="menu-item settings">
+                <i class="icon-settings"></i><span>Settings</span>
+            </div>
+            <div class="menu-item clear">
+                <i class="icon-clear"></i><span>Clear Folders</span>
+            </div>
+            <div class="menu-item about">
+                <i class="icon-about"></i><span>About</span>
+            </div>
+        </div>
+        <div class="menu-dropdown-hide hide"></div>
+        <div id="DataField">
+            <div class="settings-btn"><i class="icon-menu"></i></div>
+            <div class="current">CURRENT STATUS</div>
+            <div id="DaemonStatus" class="row"><span class="label">Daemon</span> <span class="value daemon-status">Checking daemon status...</span></div>
+            <div id="HostID" class="row"><span class="label">Host ID</span> <span class="value hostid">Checking Host ID...</span></div>
+        </div>
+        <div class="bottom-container tse-scrollable">
+            <div class="tse-content">
+                <div class="header"><i class="icon-rocket"></i> LAUNCH PAD</div>
+                <div id="dropdown-container">
+                    <div class="add-directory" title='Add a Niagara folder (ex: "C:\Niagara")'>&plus;</div>
+                    <div id="dropdown">
+                        <select class="versions form-control" title="Selected Niagara Workplace Version"></select>
+                    </div>
+                    <div id="theme">
+                        <select name="themes" class="form-control" title="Selected Theme"></select>
+                    </div>
+                </div>
+                <div class="btn-group first-row">
+                    <div id="btn-daemon" class="btn btn-daemon" title="Launch the Platform Daemon">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-rocket"></i>Daemon</span>
+                    </div>
+                    <div id="btn-program" class="btn btn-program-no-console" title="Start Niagara Workplace Software">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-window"></i>Program</span>
+                    </div><div id="btn-console" class="btn btn-program-console" title="Start Niagara Workplace Software with Console">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-code"></i></span>
+                    </div>
+                    <div id="btn-open-folder" class="btn btn-open-folder" title="Open this installation's Niagara folder in Windows Explorer">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-folder"></i>Open</span>
+                    </div>
+                </div>
+                <div class="btn-group second-row">
+                    <div id="btn-memory" class="btn btn-memory" title="Configure the Memory Settings for this version of Niagara">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-memory"></i>Memory Settings</span>
+                    </div>
+                    <div id="btn-console-only" class="btn btn-console-only" title="Start the Niagara Console">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-code"></i>Console</span>
+                    </div>
+                </div>
+                <div class="btn-group third-row">
+                    <div id="btn-import-navtree" class="btn btn-import-navtree importSync" title="Import Nav Tree from another version of Niagara">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-import"></i>Import Nav Tree</span>
+                    </div>
+                    <div id="btn-export-navtree" class="btn btn-export-navtree exportSync" title="Export Nav Tree from this version of Niagara">
+                        <div class="loading">
+                            <i class="icon-spin animate-spin"></i>
+                        </div>
+                        <span><i class="icon-export"></i>Export Nav Tree</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="settings-container screen-container hide">
+        <div class="settings-title screen-title">Settings</div>
+        <div class="settings-content screen-content">
+            <div class="settings-row">
+                <div class="settings-label">
+                    <span>Use Themes</span>
+                </div>
+                <div class="settings-value">
+                    <input type='checkbox' class='usethemes'>
+                </div>
+            </div>
+            <div class="settings-row">
+                <div class="settings-label">
+                    <span>Use Notifications</span>
+                </div>
+                <div class="settings-value">
+                    <input type='checkbox' class='usepopups'>
+                </div>
+            </div>
+            <div class="settings-row">
+                <div class="settings-label">
+                    <span>Auto Sync Nav Tree</span>
+                </div>
+                <div class="settings-value">
+                    <input type='checkbox' class='useAutoSync'>
+                </div>
+            </div>
+            <div class="settings-row settings-sync-master-row super-hide">
+                <div class="settings-label">
+                    <span>&nbsp;&nbsp;AX Nav Tree Master</span>
+                </div>
+                <div class="settings-value AX-Master">
+                    <select id="settings-ax-master"></select>
+                </div>
+            </div>
+            <div class="settings-row settings-sync-master-row super-hide">
+                <div class="settings-label">
+                    <span>&nbsp;&nbsp;N4 Nav Tree Master</span>
+                </div>
+                <div class="settings-value N4-Master">
+                    <select id="settings-n4-master"></select>
+                </div>
+            </div>
+            <div class="settings-row languages">
+                <div class="settings-label">
+                    <span>Default Language</span>
+                </div>
+                <div class="settings-value">
+                    <select id="settings-languages"></select>
+                </div>
+            </div>
+            <div class="screen-button-container">
+                <span class="close-settings screen-button">OK</span>
+            </div>
+            <input class="new-directory" style="display: none;" type="file" nwdirectory />
+            <input class="export-sync-file" style="display: none;" type="file" nwdirectory />
+            <input class="import-sync-file" style="display: none;" type="file" />
+        </div>
+    </div>
+    <div class="about-container screen-container hide">
+        <div class="about-title"><img src="/images/rocket_icon.png"><span class="workplace">Workplace</span> <span class="launcher">Launcher</span> <span class="threeOh">3.0.3</span></div>
+        <div class="about-cts">
+            <span>Created by</span>
+            <a href="http://www.cochranetechservices.com" target="_blank"><img src="images/CTS_logo_clean.svg" alt="Cochrane Tech Services"></a>
+        </div>
+        <div class="about-credits">
+            <div>Edward Stepanchenko</div>
+            <div>Aaron Rickle</div>
+        </div>
+        <div class="close-about-container"><span class="close-about screen-button">BACK</span></div>
+    </div>
+    <div class="memory-container screen-container hide">
+        <div class="memory-title screen-title">Memory Settings</div>
+        <div class="screen-content">
+            <div class="version"><span class="memory-version">Niagara Version Number</span><span class="question">?</span></div>
+            <div class="memory-ax-section super-hide">
+                <div class="memory-block">
+                    <div class="label">Heap</div>
+                    <div class="value">
+                        <input type="number" id="ax-heap">
+                        <div class="units">M</div>
+                    </div>
+                </div><div class="memory-block">
+                    <div class="label">Perm</div>
+                    <div class="value">
+                        <input type="number" id="ax-perm">
+                        <div class="units">M</div>
+                    </div>
+                </div><div class="memory-block">
+                    <div class="label">Stack</div>
+                    <div class="value">
+                        <input type="number" id="ax-stack">
+                        <div class="units">K</div>
+                    </div>
+                </div>
+            </div>
+            <div class="memory-n4-section super-hide">
+                <div class="memory-block">
+                    <div class="label">Station Heap</div>
+                    <div class="value">
+                        <input type="number" id="s-heap">
+                        <div class="units">M</div>
+                    </div>
+                </div><div class="memory-block">
+                    <div class="label">Station Stack</div>
+                    <div class="value">
+                        <input type="number" id="s-stack">
+                        <div class="units">K</div>
+                    </div>
+                </div><div class="memory-block">
+                    <div class="label">Workbench Heap</div>
+                    <div class="value">
+                        <input type="number" id="wb-heap">
+                        <div class="units">M</div>
+                    </div>
+                </div><div class="memory-block">
+                    <div class="label">Workbench Stack</div>
+                    <div class="value">
+                        <input type="number" id="wb-stack">
+                        <div class="units">K</div>
+                    </div>
+                </div>
+            </div>
+            <div class="screen-button-container">
+                <span class="reset-memory screen-button">Reset</span>
+                <span class="close-memory screen-button">OK</span>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    usethemes = localStorage.usethemes;
+    if (usethemes == "true") {
+        $(".usethemes").prop("checked", true);
+    } else {
+        $(".selected-theme").attr("disabled", true);
+    }
+    usepopups = localStorage.usepopups;
+    if (usepopups == "true") {
+        $(".usepopups").prop("checked", true);
+    }
+    useAutoSync = localStorage.useAutoSync;
+    if (useAutoSync == "true") {
+        $(".useAutoSync").prop("checked", true);
+        $(".settings-sync-master-row").removeClass("super-hide");
+    }
+    usetray = localStorage.usetray;
+    if (usetray == "true") {
+        $(".usetray").prop("checked", true);
+        createTray();
+    }
+
+    $('.tse-scrollable').TrackpadScrollEmulator();
+</script>
+
+</html>

@@ -1,0 +1,55 @@
+{
+    "version": "3.0.3",
+    "additional_trust_anchors": [
+        ""
+    ],
+    "single-instance": true,
+    "nodejs": true,
+    "webkit": {
+        "page-cache": false,
+        "java": false,
+        "plugin": true
+    },
+    "window": {
+        "icon": "images/rocket_icon.png",
+        "transparent": false,
+        "x": 0,
+        "as_desktop": false,
+        "resizable": false,
+        "mac_icon": "images/rocket_icon_48.png",
+        "kiosk": false,
+        "frame": false,
+        "visible": true,
+        "show": false,
+        "toolbar": false,
+        "title": "WorkPlace Launcher 3.0",
+        "kiosk_emulation": false,
+        "y": 0,
+        "width": 500,
+        "exe_icon": "images/rocket_icon_48.png",
+        "fullscreen": false,
+        "height": 300,
+        "show_in_taskbar": true,
+        "always_on_top": false
+    },
+    "main": "index.html",
+    "app_name": "WorkPlace Launcher 3.0",
+    "name": "WorkPlace Launcher 3.0",
+    "icon": "images/rocket_icon.png",
+    "webexe_settings": {
+        "windows-x32": true,
+        "windows-x64": false,
+        "mac-x64": false,
+        "custom_script": "",
+        "linux-x64": false,
+        "nw_version": "0.14.2",
+        "export_dir": "C:\\WorkPlace Launcher Builds",
+        "uncompressed_folder": false,
+        "download_dir": "C:/Users/estepanchenko/AppData/Local/Web2Executable/Web2Executable/files/downloads",
+        "linux-x32": false,
+        "force_download": false,
+        "sdk_build": false,
+        "mac-x32": false,
+        "nw_compression_level": 9
+    }
+}
